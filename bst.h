@@ -40,7 +40,6 @@ private:
 	void inOrder(std::stringstream&) const;
 	void postOrder(std::stringstream&) const;
 	void preOrder(std::stringstream&) const;
-	void byLevel(std::stringstream&, int) const;
 
 	uint leaves() const;
 	uint depth() const;
@@ -262,16 +261,6 @@ void Node<T>::preOrder(std::stringstream &aux) const {
 }
 
 
-template <class T>
-void Node<T>::byLevel(std::stringstream &aux, int count) const {
-	if (count == 0){
-		aux << value << " ";
-	}
-	else {
-		left->byLevel(aux, count - 1);
-		right->byLevel(aux, count - 1);
-	}
-}
 // =================================================================
 // Returns how many leaves are below the current node. Remember that
 // a node without children is a leaf.
@@ -280,18 +269,15 @@ void Node<T>::byLevel(std::stringstream &aux, int count) const {
 // =================================================================
 template <class T>
 uint Node<T>::leaves() const {
-	int count = 0;
-	if (left == NULL && right == NULL && value == 0) {
-		count = 0;
+	uint count = 0;
+	if (left == NULL && right == NULL) {
+		return 1;
 	}
-	else {
-		if (left != NULL){
-			count += (left->leaves() + 1);
-		}
-		if (right != NULL) {
-			count += (right->leaves() + 1);
-		}
-
+	if (left != NULL) {
+		count += left->leaves();
+	}
+	if (right != NULL) {
+		count += right->leaves();
 	}
 	return count;
 }
@@ -305,18 +291,25 @@ uint Node<T>::leaves() const {
 // =================================================================
 template <class T>
 uint Node<T>::depth() const {
-	if (value == 0){
-		return 0;
+	uint left_depth = 0;
+	uint right_depth = 0;
+
+	if (left == NULL && right == NULL) {
+		return 1;
+	}
+	
+	if (left != NULL) {
+		left_depth = left->depth();
+	}
+	if (right != NULL) {
+		right_depth = right->depth();
+	}
+	
+	if (left_depth >= right_depth) {
+		return (left_depth + 1);
 	}
 	else {
-		int left_depth = left->depth();
-		int right_depth = right->depth();
-		if (left_depth >= right_depth) {
-			return (left_depth + 1);
-		}
-		else {
-			return (right_depth + 1);
-		}
+		return (right_depth + 1);
 	}
 }
 
@@ -329,8 +322,14 @@ uint Node<T>::depth() const {
 // =================================================================
 template <class T>
 bool Node<T>::isFull() const {
-	//TO DO
-	return false;
+	if (left == NULL && right == NULL) {
+		return true;
+	}
+	else if (left == NULL || right == NULL) {
+		return false;
+	}
+
+	return left->isFull() && right->isFull();
 }
 
 // =================================================================
@@ -342,8 +341,22 @@ bool Node<T>::isFull() const {
 // =================================================================
 template <class T>
 T Node<T>::ancestor(T val) const {
-	//TO DO
-	return T();
+	if (val == value){
+		throw NoSuchElement();
+	}
+	if (left != NULL && left->value == val) {
+		return value;
+	}
+	else if (right != NULL && right->value == val) {
+		return value;
+	}
+	if (left != NULL && val < value) {
+		return left->ancestor(val);
+	}
+	else if (right != NULL && val > value) {
+		return right->ancestor(val);
+	}
+	throw NoSuchElement();
 }
 
 // =================================================================
@@ -370,6 +383,7 @@ public:
 	std::string preOrder() const;
 
 	std::string byLevel() const;
+	void leveling(std::stringstream&, int, Node<T>*) const;
 	uint leaves() const;
 	bool isFull() const;
 	T ancestor(T) const;
@@ -527,12 +541,26 @@ std::string BST<T>::byLevel() const {
 	aux << "[";
 	if (!empty()) {
 		int depth = root->depth();
-		for (int i = 0; i < depth - 1; i++) {
-			root->byLevel(aux,i);
+		for (int i = 0; i < depth; i++) {
+			leveling(aux, i, root);
 		}
 	}
 	aux << "]";
 	return aux.str();
+}
+
+template <class T>
+void BST<T>::leveling(std::stringstream &aux, int level, Node<T> *node) const {
+	if (node == NULL){
+		return;
+	}
+	else if (level == 0) {
+		aux << node->value << " ";
+	}
+	else {
+		leveling(aux, level - 1, node->left);
+		leveling(aux, level - 1, node->right);
+	}
 }
 
 // =================================================================
