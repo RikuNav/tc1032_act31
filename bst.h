@@ -1,8 +1,8 @@
 // =================================================================
 //
 // File: bst.h
-// Author:
-// Date:
+// Author: Ricardo Navarro - A01708825
+// Date: 19/10/22
 //
 // =================================================================
 #ifndef BST_H
@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <algorithm>
 #include "exception.h"
 #include "header.h"
 
@@ -39,6 +40,7 @@ private:
 	void inOrder(std::stringstream&) const;
 	void postOrder(std::stringstream&) const;
 	void preOrder(std::stringstream&) const;
+	void byLevel(std::stringstream&, int) const;
 
 	uint leaves() const;
 	uint depth() const;
@@ -259,6 +261,17 @@ void Node<T>::preOrder(std::stringstream &aux) const {
 	}
 }
 
+
+template <class T>
+void Node<T>::byLevel(std::stringstream &aux, int count) const {
+	if (count == 0){
+		aux << value << " ";
+	}
+	else {
+		left->byLevel(aux, count - 1);
+		right->byLevel(aux, count - 1);
+	}
+}
 // =================================================================
 // Returns how many leaves are below the current node. Remember that
 // a node without children is a leaf.
@@ -267,8 +280,20 @@ void Node<T>::preOrder(std::stringstream &aux) const {
 // =================================================================
 template <class T>
 uint Node<T>::leaves() const {
-	//TO DO
-	return 0;
+	int count = 0;
+	if (left == NULL && right == NULL && value == 0) {
+		count = 0;
+	}
+	else {
+		if (left != NULL){
+			count += (left->leaves() + 1);
+		}
+		if (right != NULL) {
+			count += (right->leaves() + 1);
+		}
+
+	}
+	return count;
 }
 
 // =================================================================
@@ -280,8 +305,19 @@ uint Node<T>::leaves() const {
 // =================================================================
 template <class T>
 uint Node<T>::depth() const {
-	//TO DO
-	return 0;
+	if (value == 0){
+		return 0;
+	}
+	else {
+		int left_depth = left->depth();
+		int right_depth = right->depth();
+		if (left_depth >= right_depth) {
+			return (left_depth + 1);
+		}
+		else {
+			return (right_depth + 1);
+		}
+	}
 }
 
 // =================================================================
@@ -490,7 +526,10 @@ std::string BST<T>::byLevel() const {
 
 	aux << "[";
 	if (!empty()) {
-		// TO DO
+		int depth = root->depth();
+		for (int i = 0; i < depth - 1; i++) {
+			root->byLevel(aux,i);
+		}
 	}
 	aux << "]";
 	return aux.str();
